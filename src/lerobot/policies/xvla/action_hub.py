@@ -535,10 +535,6 @@ class BimanualSO101ActionSpace(BaseActionSpace):
         proprio_m = self._pad_to_model_dim(proprio.clone())
         action_m = self._pad_to_model_dim(action.clone()) if action is not None else None
 
-        proprio_m[..., self.gripper_idx] = 0.0
-        if action_m is not None:
-            action_m[..., self.gripper_idx] = 0.0
-
         return proprio_m, action_m
 
     def postprocess(self, action: torch.Tensor) -> torch.Tensor:
@@ -562,10 +558,6 @@ class BimanualSO101ActionSpace(BaseActionSpace):
         # Ensure we at least have the real dims + grippers
         if action.size(-1) < self.REAL_DIM:
             raise ValueError(f"Expected at least {self.REAL_DIM} dims in action, got {action.size(-1)}")
-
-        # Apply sigmoid on gripper channels in model space (indices 5 and 11)
-        if action.size(-1) > max(self.gripper_idx):
-            action[..., self.gripper_idx] = torch.sigmoid(action[..., self.gripper_idx])
 
         # Return only the real 12-dim control vector for the env
         return self._trim_to_real_dim(action)
